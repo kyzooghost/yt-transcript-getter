@@ -9,6 +9,7 @@ A vibe-coded Python CLI tool that fetches transcripts from YouTube videos and sa
   - `https://www.youtube.com/watch?v=<id>`
   - `https://www.youtube.com/live/<id>`
   - URLs with extra query parameters (timestamps, playlists, etc.)
+- **Batch processing**: Process multiple URLs from a file with `--input-list`
 - Smart language selection (prefers manual English, falls back to auto-generated)
 - Clean Markdown output with timestamps
 - Configurable output path and language preference
@@ -62,6 +63,32 @@ uv run yt-transcript "https://youtu.be/7wWRoqC0gnU" --lang es
 uv run yt-transcript --url "https://youtu.be/7wWRoqC0gnU" --out transcript.md
 ```
 
+### Batch processing with --input-list
+
+Process multiple YouTube URLs from a file:
+
+```bash
+uv run yt-transcript --input-list urls.txt
+```
+
+**Input file format** (`urls.txt`):
+```
+https://www.youtube.com/watch?v=uJimjSDio_Y
+https://www.youtube.com/watch?v=0ctWRkOqKFc
+https://www.youtube.com/watch?v=RJZ5aTDpqKM
+# Lines starting with # are ignored
+```
+
+**Output**: Creates `transcript-<video_id>.md` for each unique video:
+- `transcript-uJimjSDio_Y.md`
+- `transcript-0ctWRkOqKFc.md`
+- `transcript-RJZ5aTDpqKM.md`
+
+**Behavior**:
+- Duplicate URLs are automatically skipped (each video ID is processed once)
+- If one URL fails, processing continues with remaining URLs
+- Summary is printed at the end with success/failure counts
+
 ## CLI Options
 
 | Option | Description | Default |
@@ -71,6 +98,7 @@ uv run yt-transcript --url "https://youtu.be/7wWRoqC0gnU" --out transcript.md
 | `--out`, `-o` | Output file path | `transcript.md` |
 | `--lang`, `-l` | Preferred language code (e.g., 'en', 'es', 'fr') | Auto-detect |
 | `--format`, `-f` | Output format (`markdown` or `md`) | `markdown` |
+| `--input-list` | Path to file with YouTube URLs (one per line) | - |
 
 ## Example Output
 
@@ -122,7 +150,8 @@ youtube-transcript/
 ├── tests/
 │   ├── test_url_parsing.py
 │   ├── test_formatting.py
-│   └── test_fetch_logic.py
+│   ├── test_fetch_logic.py
+│   └── test_cli.py          # CLI & batch processing tests
 ├── pyproject.toml
 └── README.md
 ```
