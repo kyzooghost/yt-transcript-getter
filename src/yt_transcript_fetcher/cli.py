@@ -47,11 +47,16 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
         "--input-list",
         help="Path to file containing YouTube URLs (one per line)",
     )
+    parser.add_argument(
+        "--no-verify-ssl",
+        action="store_true",
+        help="Disable SSL certificate verification (use in corporate networks with proxy)",
+    )
 
     return parser.parse_args(args)
 
 
-def process_single_url(url: str, output_path: Path, lang: str | None) -> tuple[bool, str | None]:
+def process_single_url(url: str, output_path: Path, lang: str | None, no_verify_ssl: bool = False) -> tuple[bool, str | None]:
     """
     Process a single YouTube URL and save transcript.
 
@@ -59,6 +64,7 @@ def process_single_url(url: str, output_path: Path, lang: str | None) -> tuple[b
         url: The YouTube URL.
         output_path: Path to save the transcript.
         lang: Optional language preference.
+        no_verify_ssl: Whether to disable SSL verification.
 
     Returns:
         Tuple of (success, error_message).
@@ -69,7 +75,7 @@ def process_single_url(url: str, output_path: Path, lang: str | None) -> tuple[b
         return False, f"Could not extract video ID from URL: {url}"
 
     # Fetch transcript
-    result, error = fetch_transcript(video_id, lang)
+    result, error = fetch_transcript(video_id, lang, no_verify_ssl)
     if error:
         return False, error
 
@@ -119,13 +125,14 @@ def parse_input_list(file_path: Path) -> list[str]:
     return urls
 
 
-def process_batch(input_file: Path, lang: str | None) -> int:
+def process_batch(input_file: Path, lang: str | None, no_verify_ssl: bool = False) -> int:
     """
     Process multiple YouTube URLs from a file.
 
     Args:
         input_file: Path to file containing URLs.
         lang: Optional language preference.
+        no_verify_ssl: Whether to disable SSL verification.
 
     Returns:
         Exit code (0 if all succeed, 1 if any fail).
@@ -181,7 +188,7 @@ def process_batch(input_file: Path, lang: str | None) -> int:
         output_path = Path(f"transcript-{video_id}.md")
         print(f"Processing: {video_id}")
 
-        success, error = process_single_url(url, output_path, lang)
+        success, error = process_single_url(url, output_path, lang, no_verify_ssl)
         if success:
             success_count += 1
         else:
@@ -217,7 +224,7 @@ def main(args: list[str] | None = None) -> int:
 
     # Handle batch processing mode
     if parsed.input_list:
-        return process_batch(Path(parsed.input_list), parsed.lang)
+        return process_batch(Path(parsed.input_list), parsed.lang, parsed.no_verify_ssl)
 
     # Get URL from either positional or flag argument
     url = parsed.url or parsed.url_flag
@@ -229,7 +236,7 @@ def main(args: list[str] | None = None) -> int:
         return 1
 
     # Process single URL
-    success, error = process_single_url(url, Path(parsed.out), parsed.lang)
+    success, error = process_single_url(url, Path(parsed.out), parsed.lang, parsed.no_verify_ssl)
     if not success:
         print(f"Error: {error}", file=sys.stderr)
         return 1

@@ -99,6 +99,7 @@ https://www.youtube.com/watch?v=RJZ5aTDpqKM
 | `--lang`, `-l` | Preferred language code (e.g., 'en', 'es', 'fr') | Auto-detect |
 | `--format`, `-f` | Output format (`markdown` or `md`) | `markdown` |
 | `--input-list` | Path to file with YouTube URLs (one per line) | - |
+| `--no-verify-ssl` | Disable SSL certificate verification | `false` |
 
 ## Example Output
 
@@ -155,6 +156,24 @@ youtube-transcript/
 ├── pyproject.toml
 └── README.md
 ```
+
+## Troubleshooting
+
+### SSL Certificate Verification Error
+
+If you encounter an SSL certificate verification error (common in corporate networks with proxy servers):
+
+```
+Error: Failed to fetch transcript: ... SSL: CERTIFICATE_VERIFY_FAILED ...
+```
+
+You can disable SSL verification using the `--no-verify-ssl` flag:
+
+```bash
+uv run yt-transcript "https://youtu.be/VIDEO_ID" --no-verify-ssl
+```
+
+**Note**: Only use this in trusted environments (e.g., behind a corporate proxy). Disabling SSL verification makes your connection vulnerable to man-in-the-middle attacks.
 
 ## Limitations
 

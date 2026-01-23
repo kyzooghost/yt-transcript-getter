@@ -2,6 +2,7 @@
 
 import re
 import sys
+import urllib3
 from typing import NamedTuple
 
 from youtube_transcript_api import YouTubeTranscriptApi
@@ -134,21 +135,30 @@ def _select_transcript(transcripts, preferred_lang: str | None = None):
     return None, None, None, "No transcripts available."
 
 
-def fetch_transcript(video_id: str, lang: str | None = None) -> tuple[TranscriptResult | None, str | None]:
+def fetch_transcript(video_id: str, lang: str | None = None, no_verify_ssl: bool = False) -> tuple[TranscriptResult | None, str | None]:
     """
     Fetch the transcript for a YouTube video.
 
     Args:
         video_id: The YouTube video ID.
         lang: Optional language code to prefer.
+        no_verify_ssl: Whether to disable SSL certificate verification.
 
     Returns:
         Tuple of (TranscriptResult or None, error_message or None).
         On success, error_message is None (though there may be a warning printed).
         On failure, TranscriptResult is None and error_message contains the error.
     """
+    # Create custom session if SSL verification needs to be disabled
+    http_client = None
+    if no_verify_ssl:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        from requests import Session
+        http_client = Session()
+        http_client.verify = False
+
     try:
-        ytt_api = YouTubeTranscriptApi()
+        ytt_api = YouTubeTranscriptApi(http_client=http_client)
         transcript_list = ytt_api.list(video_id)
     except TranscriptsDisabled:
         return None, f"Transcripts are disabled for video '{video_id}'."
