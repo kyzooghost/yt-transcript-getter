@@ -21,3 +21,4 @@ __pycache__
 .env.test.local
 .env.production.local
 transcript*.md
+urls.txt
