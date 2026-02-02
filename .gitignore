@@ -22,3 +22,6 @@ __pycache__
 .env.production.local
 transcript*.md
 urls.txt
+.beads
+.vercel
+node_modules

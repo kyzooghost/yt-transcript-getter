@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YouTube Transcript Snippets</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>YouTube Transcript Snippets</h1>
+            <p class="subtitle">Split transcripts into 20-minute chunks for easy copy-paste</p>
+        </header>
+
+        <!-- Input Form -->
+        <section id="form-section" class="section">
+            <form id="transcript-form">
+                <input
+                    type="text"
+                    id="url-input"
+                    placeholder="Paste YouTube URL here (e.g., youtube.com/watch?v=...)"
+                    required
+                >
+                <button type="submit" id="submit-btn">Process Transcript</button>
+            </form>
+        </section>
+
+        <!-- Loading State -->
+        <section id="loading-section" class="section hidden">
+            <div class="spinner"></div>
+            <p class="status-text">Fetching transcript...</p>
+        </section>
+
+        <!-- Error Display -->
+        <section id="error-section" class="section hidden">
+            <div class="error-box">
+                <h2>Error</h2>
+                <p id="error-message"></p>
+                <p class="error-suggestion" id="error-suggestion"></p>
+                <button id="retry-btn" class="secondary-btn">Try Another Video</button>
+            </div>
+        </section>
+
+        <!-- Results Display -->
+        <section id="results-section" class="section hidden">
+            <div class="results-header">
+                <button id="new-video-btn" class="secondary-btn">Process Another Video</button>
+                <div class="video-info">
+                    <p><strong>Video ID:</strong> <span id="video-id"></span></p>
+                    <p><strong>Language:</strong> <span id="language"></span> <span id="generated-badge"></span></p>
+                </div>
+            </div>
+
+            <h2>Transcript Snippets</h2>
+            <p class="section-description">Click on a snippet to expand it. Each snippet is approximately 20 minutes.</p>
+
+            <div id="snippets-container" class="snippets-container"></div>
+
+            <h2>Full Transcript</h2>
+            <div class="full-transcript-controls">
+                <button id="copy-full-btn" class="action-btn">Copy Full Transcript</button>
+                <button id="download-full-btn" class="action-btn">Download Full Transcript</button>
+            </div>
+            <pre id="full-transcript" class="transcript-preview"></pre>
+        </section>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast hidden">Copied!</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
