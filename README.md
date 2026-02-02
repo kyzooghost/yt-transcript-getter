@@ -2,7 +2,7 @@
 
 A vibe-coded Python CLI tool that fetches transcripts from YouTube videos and saves them as Markdown files.
 
-## Features
+## Features 
 
 - Supports multiple YouTube URL formats:
   - `https://youtu.be/<id>`
