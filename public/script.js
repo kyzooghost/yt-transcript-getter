@@ -206,7 +206,10 @@ function showError(error, suggestion) {
 
 async function processTranscript(url) {
     try {
-        const response = await fetch("/api/transcript", {
+        // Use localhost for mobile server, or relative path for Vercel
+        const apiUrl = window.location.port === '5000' ? 'http://localhost:5000/api/transcript' : '/api/transcript';
+
+        const response = await fetch(apiUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
