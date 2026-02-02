@@ -206,9 +206,9 @@ def fetch_transcript(video_id: str, lang: str | None = None):
 
     segments = [
         TranscriptSegment(
-            start=seg["start"],
-            duration=seg["duration"],
-            text=seg["text"],
+            start=seg.start,
+            duration=seg.duration,
+            text=seg.text,
         )
         for seg in raw_segments
     ]
