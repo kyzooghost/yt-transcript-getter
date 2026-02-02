@@ -216,18 +216,20 @@ def fetch_transcript(video_id: str, lang: str | None = None):
     return segments, language, is_generated, None
 
 
-def find_sentence_boundary(segments: list[TranscriptSegment], target_time: float, window: float = 120.0) -> int:
+def find_sentence_boundary(segments: list[TranscriptSegment], start_offset_time: float, target_duration: float, window: float = 120.0) -> int:
     """
     Find the best sentence boundary near a target time.
 
     Args:
-        segments: List of transcript segments
-        target_time: Target time in seconds (e.g., 1200 for 20 minutes)
+        segments: List of transcript segments to search within
+        start_offset_time: Start time of the current snippet
+        target_duration: Target duration in seconds from start_offset_time (e.g., 1200 for 20 minutes)
         window: Search window in seconds (±2 minutes = 120 seconds)
 
     Returns:
         Index of the segment to split at (next snippet starts at this index)
     """
+    target_time = start_offset_time + target_duration
     min_time = target_time - window
     max_time = target_time + window
 
@@ -256,7 +258,7 @@ def find_sentence_boundary(segments: list[TranscriptSegment], target_time: float
             min_distance = distance
             closest_idx = i
 
-    return closest_idx
+    return closest_idx if closest_idx > 0 else 1  # Ensure we always advance at least 1 segment
 
 
 def split_into_snippets(segments: list[TranscriptSegment], target_minutes: int = 20, variance_minutes: int = 2):
@@ -306,8 +308,7 @@ def split_into_snippets(segments: list[TranscriptSegment], target_minutes: int =
             break
 
         # Find the best split point
-        split_idx = find_sentence_boundary(segments[current_start_idx:], target_seconds, variance_seconds)
-        split_idx += current_start_idx  # Adjust for offset
+        split_idx = find_sentence_boundary(segments, current_start_time, target_seconds, variance_seconds)
 
         # Extract snippet
         snippet_segments = segments[current_start_idx:split_idx]
