@@ -1,6 +1,6 @@
 ---
 name: summarise-transcript
-description: Summarizes YouTube video transcripts in 20-minute chunks with structured output. Use when asked to summarize YT transcripts, meeting recordings, or video content. Looks for `transcript-*.md` files and produces summaries with key points by speaker, technical insights, decisions, action items, and follow-ups. Outputs to `summary-<video-id>.md`.
+description: Summarizes YouTube video transcripts in 20-minute chunks with structured output. Use when asked to summarize YT transcripts, meeting recordings, or video content. Looks for `output/transcript-*.md` files and produces summaries with key points by speaker, technical insights, decisions, action items, and follow-ups. Outputs to `output/summary-<video-id>.md`.
 ---
 
 # Summarise Transcript
@@ -11,11 +11,11 @@ Summarize YouTube video transcripts into structured 20-minute chunks for easy re
 
 ### 1. Find Transcript Files
 
-Search for `transcript-*.md` files in the working directory using Glob.
+Search for `output/transcript-*.md` files in the working directory using Glob.
 
 - If user specifies a file path, use only that file
-- Otherwise, find ALL `transcript-*.md` files in the directory
-- Extract video ID from each filename: `transcript-<video-id>.md` -> `<video-id>`
+- Otherwise, find ALL `output/transcript-*.md` files in the directory
+- Extract video ID from each filename: `output/transcript-<video-id>.md` -> `<video-id>`
 
 ### 2. Process Multiple Transcripts in Parallel
 
@@ -23,7 +23,7 @@ When multiple transcript files are found:
 
 1. Use the **Task tool** with `subagent_type: "general-purpose"` for EACH transcript file
 2. Launch all agents **in parallel** (single message with multiple Task tool calls)
-3. Each agent processes one transcript independently and outputs to its own `summary-<video-id>.md`
+3. Each agent processes one transcript independently and outputs to its own `output/summary-<video-id>.md`
 
 **Task prompt template for each agent:**
 ```
@@ -86,14 +86,14 @@ Apply the summarization prompt:
 
 ### 4. Output Format
 
-Create `summary-<video-id>.md` in the same directory as the transcript.
+Create `output/summary-<video-id>.md` in the output directory alongside the transcript.
 
 ## Example Usage
 
 **Single transcript:**
-User: "Summarize transcript-Ta5g-OxjPO4.md"
--> Process that one file, output to summary-Ta5g-OxjPO4.md
+User: "Summarize output/transcript-Ta5g-OxjPO4.md"
+-> Process that one file, output to output/summary-Ta5g-OxjPO4.md
 
 **All transcripts in directory:**
 User: "Summarize all YT transcripts"
--> Glob for transcript-*.md, spawn parallel general-purpose agents for each
+-> Glob for output/transcript-*.md, spawn parallel general-purpose agents for each

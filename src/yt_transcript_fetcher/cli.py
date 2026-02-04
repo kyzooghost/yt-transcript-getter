@@ -56,7 +56,9 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(args)
 
 
-def process_single_url(url: str, output_path: Path, lang: str | None, no_verify_ssl: bool = False) -> tuple[bool, str | None]:
+def process_single_url(
+    url: str, output_path: Path, lang: str | None, no_verify_ssl: bool = False
+) -> tuple[bool, str | None]:
     """
     Process a single YouTube URL and save transcript.
 
@@ -125,7 +127,9 @@ def parse_input_list(file_path: Path) -> list[str]:
     return urls
 
 
-def process_batch(input_file: Path, lang: str | None, no_verify_ssl: bool = False) -> int:
+def process_batch(
+    input_file: Path, lang: str | None, no_verify_ssl: bool = False
+) -> int:
     """
     Process multiple YouTube URLs from a file.
 
@@ -184,8 +188,12 @@ def process_batch(input_file: Path, lang: str | None, no_verify_ssl: bool = Fals
     success_count = 0
     failures: list[tuple[str, str]] = []
 
+    # Ensure output directory exists
+    output_dir = Path("output")
+    output_dir.mkdir(exist_ok=True)
+
     for video_id, url in video_id_to_url.items():
-        output_path = Path(f"transcript-{video_id}.md")
+        output_path = output_dir / f"transcript-{video_id}.md"
         print(f"Processing: {video_id}")
 
         success, error = process_single_url(url, output_path, lang, no_verify_ssl)
@@ -231,12 +239,16 @@ def main(args: list[str] | None = None) -> int:
 
     if not url:
         print("Error: No YouTube URL provided.", file=sys.stderr)
-        print("Usage: yt-transcript <url> [--out <path>] [--lang <code>]", file=sys.stderr)
+        print(
+            "Usage: yt-transcript <url> [--out <path>] [--lang <code>]", file=sys.stderr
+        )
         print("       yt-transcript --input-list <file>", file=sys.stderr)
         return 1
 
     # Process single URL
-    success, error = process_single_url(url, Path(parsed.out), parsed.lang, parsed.no_verify_ssl)
+    success, error = process_single_url(
+        url, Path(parsed.out), parsed.lang, parsed.no_verify_ssl
+    )
     if not success:
         print(f"Error: {error}", file=sys.stderr)
         return 1

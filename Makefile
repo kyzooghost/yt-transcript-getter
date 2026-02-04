@@ -10,4 +10,4 @@ run-page:
 	uv run python mobile_server.py
 
 clean:
-	rm -f summary-*.md transcript-*.md
+	rm -rf output/

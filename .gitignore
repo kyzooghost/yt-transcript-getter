@@ -20,8 +20,7 @@ __pycache__
 .env.development.local
 .env.test.local
 .env.production.local
-transcript*.md
-summary*.md
+output/
 urls.txt
 .beads
 .vercel
