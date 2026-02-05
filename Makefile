@@ -1,4 +1,4 @@
-.PHONY: get-list install run-page clean
+.PHONY: get-list install run-page phone-page clean
 
 get-list:
 	uv run yt-transcript --input-list urls.txt --no-verify-ssl
@@ -8,6 +8,9 @@ install:
 
 run-page:
 	uv run python mobile_server.py
+
+phone-page:
+	python mobile_server.py
 
 clean:
 	rm -rf output/
