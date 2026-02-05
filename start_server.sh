@@ -14,7 +14,7 @@ fi
 # Check if Python packages are installed
 if ! python -c "import flask" 2>/dev/null; then
     echo "❌ Flask not installed. Installing dependencies..."
-    pip install flask==3.1.0 flask-cors==5.0.0 youtube-transcript-api==0.6.2
+    pip install flask==3.1.0 flask-cors==5.0.0 youtube-transcript-api
 fi
 
 # Start the server

@@ -21,7 +21,7 @@
    pkg install -y python git
 
    # Install Python dependencies
-   pip install youtube-transcript-api==0.6.2 flask==3.1.0 flask-cors==5.0.0
+   pip install youtube-transcript-api flask==3.1.0 flask-cors==5.0.0
 
    # Setup storage access (optional)
    termux-setup-storage
