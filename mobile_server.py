@@ -76,7 +76,7 @@ def get_transcript():
             }), 400
 
         # Split into snippets
-        snippets = split_into_snippets(segments, target_minutes=20, variance_minutes=2)
+        snippets = split_into_snippets(segments, target_minutes=15, variance_minutes=2)
 
         # Format full transcript
         full_transcript = format_transcript_to_markdown(segments)
