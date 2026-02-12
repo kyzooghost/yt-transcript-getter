@@ -1,7 +1,7 @@
 .PHONY: get-list install run-page phone-page clean empty
 
 get-list:
-	uv run yt-transcript --input-list urls.txt --no-verify-ssl
+	UV_INSECURE_HOST="pypi.org files.pythonhosted.org" uv run yt-transcript --input-list urls.txt --no-verify-ssl
 
 install:
 	uv pip install flask flask-cors youtube-transcript-api
