@@ -13,7 +13,7 @@ phone-page:
 	python mobile_server.py
 
 clean:
-	rm -rf output/
+	rm -rf output/*
 
 empty:
 	mkdir -p output
