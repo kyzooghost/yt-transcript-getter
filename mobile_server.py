@@ -6,18 +6,14 @@ Designed to run on Android via Termux.
 """
 
 import os
-import sys
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-# Import the transcript logic from api/transcript.py
-sys.path.insert(0, 'api')
-from transcript import (
-    extract_video_id,
-    fetch_transcript,
+from yt_transcript_fetcher.youtube import extract_video_id, fetch_transcript
+from yt_transcript_fetcher.formatting import (
     split_into_snippets,
     format_transcript_to_markdown,
-    get_error_suggestion
+    get_error_suggestion,
 )
 
 app = Flask(__name__, static_folder='public')
@@ -67,7 +63,7 @@ def get_transcript():
             }), 400
 
         # Fetch transcript
-        segments, language, is_generated, error = fetch_transcript(video_id)
+        result, error = fetch_transcript(video_id)
         if error:
             return jsonify({
                 'success': False,
@@ -76,17 +72,17 @@ def get_transcript():
             }), 400
 
         # Split into snippets
-        snippets = split_into_snippets(segments, target_minutes=15, variance_minutes=2)
+        snippets = split_into_snippets(result.segments, target_minutes=15, variance_minutes=2)
 
         # Format full transcript
-        full_transcript = format_transcript_to_markdown(segments)
+        full_transcript = format_transcript_to_markdown(result.segments)
 
         # Success response
         return jsonify({
             'success': True,
             'video_id': video_id,
-            'language': language,
-            'is_generated': is_generated,
+            'language': result.language,
+            'is_generated': result.is_generated,
             'snippets': snippets,
             'full_transcript': full_transcript
         })
