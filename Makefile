@@ -1,4 +1,4 @@
-.PHONY: get-list install run-page phone-page clean
+.PHONY: get-list install run-page phone-page clean empty
 
 get-list:
 	uv run yt-transcript --input-list urls.txt --no-verify-ssl
@@ -14,3 +14,7 @@ phone-page:
 
 clean:
 	rm -rf output/
+
+empty:
+	mkdir -p output
+	touch output/transcript-1.md
