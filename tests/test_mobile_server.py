@@ -1,4 +1,5 @@
 import mobile_server
+from yt_transcript_fetcher.youtube import TranscriptResult
 
 
 def test_mobile_server_uses_15_minute_snippets(monkeypatch):
@@ -9,11 +10,13 @@ def test_mobile_server_uses_15_minute_snippets(monkeypatch):
         captured["variance_minutes"] = variance_minutes
         return [{"id": 1, "start": 0, "end": 0, "text": ""}]
 
+    fake_result = TranscriptResult(segments=[], language="en", is_generated=False)
+
     monkeypatch.setattr(mobile_server, "extract_video_id", lambda url: "abc123")
     monkeypatch.setattr(
         mobile_server,
         "fetch_transcript",
-        lambda video_id: ([], "en", False, None),
+        lambda video_id: (fake_result, None),
     )
     monkeypatch.setattr(mobile_server, "split_into_snippets", fake_split)
     monkeypatch.setattr(
