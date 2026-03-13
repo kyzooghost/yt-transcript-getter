@@ -40,11 +40,39 @@ def test_download_audio_success(tmp_path: Path):
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             "dQw4w9WgXcQ",
             tmp_path,
+            no_verify_ssl=False,
         )
 
         assert success is True
         assert error is None
         mock_ydl.download.assert_called_once()
+        # Verify nocheckcertificate is set to False by default
+        opts = mock_ydl_class.call_args[0][0]
+        assert opts["nocheckcertificate"] is False
+
+
+def test_download_audio_with_no_verify_ssl(tmp_path: Path):
+    """download_audio sets nocheckcertificate when no_verify_ssl is True."""
+    from yt_transcript_fetcher.audio import download_audio
+
+    with patch("yt_transcript_fetcher.audio.yt_dlp.YoutubeDL") as mock_ydl_class:
+        mock_ydl = MagicMock()
+        mock_ydl_class.return_value.__enter__ = MagicMock(return_value=mock_ydl)
+        mock_ydl_class.return_value.__exit__ = MagicMock(return_value=False)
+        mock_ydl.download.return_value = 0
+
+        success, error = download_audio(
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "dQw4w9WgXcQ",
+            tmp_path,
+            no_verify_ssl=True,
+        )
+
+        assert success is True
+        assert error is None
+        # Verify nocheckcertificate is set to True
+        opts = mock_ydl_class.call_args[0][0]
+        assert opts["nocheckcertificate"] is True
 
 
 def test_download_audio_failure(tmp_path: Path):

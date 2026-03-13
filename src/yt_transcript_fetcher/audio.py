@@ -29,7 +29,9 @@ def check_ffmpeg() -> bool:
         return False
 
 
-def download_audio(url: str, video_id: str, output_dir: Path) -> tuple[bool, str | None]:
+def download_audio(
+    url: str, video_id: str, output_dir: Path, no_verify_ssl: bool = False
+) -> tuple[bool, str | None]:
     """
     Download audio from YouTube URL as MP3.
 
@@ -37,6 +39,7 @@ def download_audio(url: str, video_id: str, output_dir: Path) -> tuple[bool, str
         url: The YouTube URL.
         video_id: The video ID (for output filename).
         output_dir: Directory to save the audio file.
+        no_verify_ssl: Whether to disable SSL certificate verification.
 
     Returns:
         Tuple of (success, error_message).
@@ -45,6 +48,7 @@ def download_audio(url: str, video_id: str, output_dir: Path) -> tuple[bool, str
 
     ydl_opts = {
         "format": "bestaudio/best",
+        "nocheckcertificate": no_verify_ssl,
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
@@ -136,7 +140,7 @@ def process_batch(input_file: Path, no_verify_ssl: bool = False) -> int:
     for video_id, url in video_id_to_url.items():
         print(f"Downloading: {video_id}")
 
-        success, error = download_audio(url, video_id, output_dir)
+        success, error = download_audio(url, video_id, output_dir, no_verify_ssl)
         if success:
             success_count += 1
             print(f"  Saved to: output/audio-{video_id}.mp3")
