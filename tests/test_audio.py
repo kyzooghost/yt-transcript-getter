@@ -65,3 +65,44 @@ def test_download_audio_failure(tmp_path: Path):
 
         assert success is False
         assert "Video unavailable" in error
+
+
+def test_process_batch_deduplicates_urls(tmp_path: Path):
+    """process_batch deduplicates URLs by video ID."""
+    from yt_transcript_fetcher.audio import process_batch
+
+    # Create input file with duplicate URLs
+    input_file = tmp_path / "urls.txt"
+    input_file.write_text(
+        "https://www.youtube.com/watch?v=abc12345678\n"
+        "https://youtu.be/abc12345678\n"  # duplicate
+        "https://www.youtube.com/watch?v=xyz98765432\n"
+    )
+
+    with patch("yt_transcript_fetcher.audio.download_audio") as mock_download:
+        mock_download.return_value = (True, None)
+        with patch("yt_transcript_fetcher.audio.check_ffmpeg", return_value=True):
+            process_batch(input_file)
+
+        # Should only call download twice (deduplicated)
+        assert mock_download.call_count == 2
+
+
+def test_process_batch_skips_invalid_urls(tmp_path: Path):
+    """process_batch skips invalid URLs."""
+    from yt_transcript_fetcher.audio import process_batch
+
+    input_file = tmp_path / "urls.txt"
+    input_file.write_text(
+        "https://www.youtube.com/watch?v=abc12345678\n"
+        "not-a-valid-url\n"
+        "https://example.com/video\n"
+    )
+
+    with patch("yt_transcript_fetcher.audio.download_audio") as mock_download:
+        mock_download.return_value = (True, None)
+        with patch("yt_transcript_fetcher.audio.check_ffmpeg", return_value=True):
+            process_batch(input_file)
+
+        # Should only call download once (only one valid URL)
+        assert mock_download.call_count == 1
