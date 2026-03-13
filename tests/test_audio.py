@@ -106,3 +106,21 @@ def test_process_batch_skips_invalid_urls(tmp_path: Path):
 
         # Should only call download once (only one valid URL)
         assert mock_download.call_count == 1
+
+
+def test_parse_args_input_list():
+    """parse_args correctly parses --input-list argument."""
+    from yt_transcript_fetcher.audio import parse_args
+
+    args = parse_args(["--input-list", "urls.txt"])
+    assert args.input_list == "urls.txt"
+    assert args.no_verify_ssl is False
+
+
+def test_parse_args_no_verify_ssl():
+    """parse_args correctly parses --no-verify-ssl flag."""
+    from yt_transcript_fetcher.audio import parse_args
+
+    args = parse_args(["--input-list", "urls.txt", "--no-verify-ssl"])
+    assert args.input_list == "urls.txt"
+    assert args.no_verify_ssl is True

@@ -1,5 +1,6 @@
 """YouTube audio download functionality using yt-dlp."""
 
+import argparse
 import subprocess
 import sys
 from pathlib import Path
@@ -156,3 +157,42 @@ def process_batch(input_file: Path, no_verify_ssl: bool = False) -> int:
         return 1
 
     return 0
+
+
+def parse_args(args: list[str] | None = None) -> argparse.Namespace:
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        prog="yt-audio",
+        description="Download YouTube video audio as MP3 files.",
+    )
+
+    parser.add_argument(
+        "--input-list",
+        required=True,
+        help="Path to file containing YouTube URLs (one per line)",
+    )
+    parser.add_argument(
+        "--no-verify-ssl",
+        action="store_true",
+        help="Disable SSL certificate verification (use in corporate networks with proxy)",
+    )
+
+    return parser.parse_args(args)
+
+
+def main(args: list[str] | None = None) -> int:
+    """
+    Main entry point for the CLI.
+
+    Args:
+        args: Optional list of arguments (for testing). Uses sys.argv if None.
+
+    Returns:
+        Exit code (0 for success, non-zero for failure).
+    """
+    parsed = parse_args(args)
+    return process_batch(Path(parsed.input_list), parsed.no_verify_ssl)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
