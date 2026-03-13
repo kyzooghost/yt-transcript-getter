@@ -5,7 +5,7 @@ description: Download YouTube videos as audio, transcribe with whisper, and summ
 
 # yt-get-audio
 
-Download YouTube audio, transcribe with whisper-cpp, and generate structured summaries.
+Download YouTube audio, optionally transcribe and summarize.
 
 ## Usage
 
@@ -16,12 +16,10 @@ Download YouTube audio, transcribe with whisper-cpp, and generate structured sum
 ## Pipeline
 
 ```
-URLs -> urls.txt -> MP3 -> Transcript -> Summary
+URLs -> urls.txt -> MP3 -> [Transcript -> Summary]
 ```
 
-1. Download audio as MP3 (128kbps)
-2. Transcribe with whisper-cpp
-3. Summarize with structured output
+Transcription requires local whisper model. If unavailable, stops at MP3.
 
 ## Workflow
 
@@ -41,33 +39,40 @@ make get-list-audio
 
 Output: `output/audio-{video_id}.mp3` for each URL.
 
-### 3. Transcribe Each Audio File
-
-For each `output/audio-{video_id}.mp3`, run the transcription:
+### 3. Check for Whisper Model
 
 ```bash
-# Convert to WAV
-ffmpeg -i "output/audio-{video_id}.mp3" -ar 16000 -ac 1 -c:a pcm_s16le /tmp/whisper_{video_id}.wav
+ls ~/.whisper-cpp/ggml-medium.bin
+```
 
-# Transcribe
+**If model NOT found:** Stop here and inform user:
+
+> Audio files downloaded to `output/audio-*.mp3`
+>
+> Local whisper model not found at `~/.whisper-cpp/ggml-medium.bin`.
+>
+> To transcribe, either:
+> 1. Install whisper-cpp model locally, or
+> 2. Upload MP3 files to https://elevenlabs.io/mp3-to-text for online transcription
+>
+> After getting transcripts, save them as `output/transcript-{video_id}.md` and run `/summarise-transcript`.
+
+**If model found:** Continue to step 4.
+
+### 4. Transcribe Each Audio File
+
+For each `output/audio-{video_id}.mp3`:
+
+```bash
+ffmpeg -i "output/audio-{video_id}.mp3" -ar 16000 -ac 1 -c:a pcm_s16le /tmp/whisper_{video_id}.wav
 whisper-cpp -m ~/.whisper-cpp/ggml-medium.bin -f /tmp/whisper_{video_id}.wav -otxt -l en
 ```
 
-Read `/tmp/whisper_{video_id}.wav.txt` and save as `output/transcript-{video_id}.md`:
+Save `/tmp/whisper_{video_id}.wav.txt` as `output/transcript-{video_id}.md`.
 
-```markdown
-# Transcript: {video_id}
-
-{transcript_content}
-```
-
-Process sequentially (transcription is CPU-intensive).
-
-### 4. Summarize
+### 5. Summarize
 
 Invoke `/summarise-transcript` to process all transcripts.
-
-Output: `output/summary-{video_id}.md` for each transcript.
 
 ## Example
 
@@ -75,12 +80,10 @@ Output: `output/summary-{video_id}.md` for each transcript.
 /yt-get-audio https://www.youtube.com/watch?v=abc123
 ```
 
-Produces:
+With whisper model:
 - `output/audio-abc123.mp3`
 - `output/transcript-abc123.md`
 - `output/summary-abc123.md`
 
-## Requirements
-
-- `ffmpeg` installed
-- `whisper-cpp` installed with medium model at `~/.whisper-cpp/ggml-medium.bin`
+Without whisper model:
+- `output/audio-abc123.mp3` (then use elevenlabs.io for transcription)
