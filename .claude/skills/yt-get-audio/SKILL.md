@@ -53,7 +53,7 @@ ls ~/.whisper-cpp/ggml-medium.bin
 >
 > To transcribe, either:
 > 1. Install whisper-cpp model locally, or
-> 2. Upload MP3 files to https://elevenlabs.io/mp3-to-text for online transcription
+> 2. Use https://elevenlabs.io/mp3-to-text to transcribe online
 >
 > After getting transcripts, save them as `output/transcript-{video_id}.md` and run `/summarise-transcript`.
 
