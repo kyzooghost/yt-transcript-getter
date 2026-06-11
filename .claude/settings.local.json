@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__acp__Edit",
+      "mcp__acp__Bash",
+      "mcp__acp__Write",
+      "Skill(summarise-transcript)",
+      "Bash(find:*)",
+      "Bash(make clean:*)",
+      "Bash(make get-list:*)",
+      "Bash(uv run:*)",
+      "Bash(UV_NO_VERIFY_SSL=1 uv run:*)",
+      "Bash(UV_NATIVE_TLS=1 uv run:*)",
+      "mcp__ceb__ask_questions",
+      "mcp__atlassian__search"
+    ]
+  }
+}

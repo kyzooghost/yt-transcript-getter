@@ -1,7 +1,7 @@
 .PHONY: get-list get-list-audio install run-page phone-page clean empty
 
 get-list:
-	UV_INSECURE_HOST="pypi.org files.pythonhosted.org" uv run yt-transcript --input-list urls.txt --no-verify-ssl
+	REQUESTS_CA_BUNDLE="" UV_INSECURE_HOST="pypi.org files.pythonhosted.org" uv run yt-transcript --input-list urls.txt --no-verify-ssl
 
 get-list-audio:
 	UV_INSECURE_HOST="pypi.org files.pythonhosted.org" uv run python -m yt_transcript_fetcher.audio --input-list urls.txt --no-verify-ssl
