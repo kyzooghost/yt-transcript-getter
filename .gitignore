@@ -25,3 +25,5 @@ urls.txt
 .beads
 .vercel
 node_modules
+.playwright-mcp
+tmp-docs
