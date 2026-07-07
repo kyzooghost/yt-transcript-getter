@@ -27,3 +27,6 @@ urls.txt
 node_modules
 .playwright-mcp
 tmp-docs
+
+# Claude local settings (may contain environment-specific permissions)
+.claude/settings.local.json
