@@ -175,6 +175,39 @@ uv run yt-transcript "https://youtu.be/VIDEO_ID" --no-verify-ssl
 
 **Note**: Only use this in trusted environments (e.g., behind a corporate proxy). Disabling SSL verification makes your connection vulnerable to man-in-the-middle attacks.
 
+## Claude Code Skills
+
+This project includes Claude Code skills for end-to-end transcript workflows:
+
+### `/yt-get` - YouTube transcripts + summaries
+
+```
+/yt-get https://www.youtube.com/watch?v=abc123 https://www.youtube.com/watch?v=def456
+/yt-get --clean https://www.youtube.com/watch?v=abc123
+```
+
+Downloads YouTube transcripts and generates structured summaries in 20-minute chunks.
+
+### `/get-x-broadcast-audio` - X/Twitter broadcast transcripts + summaries
+
+```
+/get-x-broadcast-audio https://x.com/someone/status/1234567890
+```
+
+Downloads audio from X broadcasts/spaces using `yt-dlp` with Chrome cookies, transcribes with Whisper, and generates structured summaries. Requires Chrome to be logged into X.
+
+### `/summarise-transcript` - Summarize existing transcripts
+
+Summarizes all `output/transcript-*.md` files into structured 20-minute chunk summaries with key points, technical insights, decisions, and action items.
+
+### `/transcribe-mp3` - Transcribe audio files
+
+```
+/transcribe-mp3 output/some-audio.mp3
+```
+
+Transcribes MP3 audio to timestamped markdown using OpenAI Whisper (small model).
+
 ## Limitations
 
 - Requires the video to have transcripts enabled (either manual or auto-generated)
