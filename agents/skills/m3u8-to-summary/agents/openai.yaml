@@ -1,0 +1,4 @@
+interface:
+  display_name: "M3U8 to Summary"
+  short_description: "Convert HLS audio into summaries"
+  default_prompt: "Use $m3u8-to-summary to turn this signed .m3u8 URL into an MP3, transcript, and structured summary."
