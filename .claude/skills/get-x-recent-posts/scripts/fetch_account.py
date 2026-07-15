@@ -216,7 +216,9 @@ def normalize_tweet(result: dict, cutoff: datetime, handle: str) -> dict | None:
     """Map a tweet_results.result dict to the rich schema, or None if it should be skipped."""
     if "tweet" in result:
         result = result["tweet"]
-    if result.get("__typename") != "Tweet":
+    typename = result.get("__typename", "")
+    if typename not in ("Tweet", "TweetWithVisibilityResults"):
+        log(f"skipping __typename={typename} id={result.get('rest_id','?')}")
         return None
     tid = str(result.get("rest_id", ""))
     if not tid:
@@ -340,7 +342,9 @@ def iter_page_tweets(data: dict) -> tuple[list[dict], str | None]:
                 continue
             # conversation cluster: moduleItems / items
             for mi in (entry.get("moduleItems") or content.get("items") or []):
-                ic = mi.get("itemContent") or mi
+                # items can be nested as {item: {itemContent: ...}} or flat {itemContent: ...}
+                inner = mi.get("item", mi)
+                ic = inner.get("itemContent") or mi.get("itemContent") or mi
                 result = (ic.get("tweet_results", {}) or {}).get("result")
                 if result:
                     tweets.append(result)
@@ -364,6 +368,17 @@ def main() -> int:
     cookies = load_cookies(args.cookies)
 
     session = requests.Session()
+    # Corporate proxies may MITM TLS with self-signed certs; honour env override.
+    # session.verify alone is insufficient in some requests versions, so we
+    # monkey-patch .request() to inject verify=False into every call.
+    if os.environ.get("X_FETCH_NO_VERIFY", "").lower() in ("1", "true", "yes"):
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        _orig_request = session.request
+        def _patched_request(*args, **kwargs):
+            kwargs.setdefault("verify", False)
+            return _orig_request(*args, **kwargs)
+        session.request = _patched_request
     session.headers.update({
         "User-Agent": USER_AGENT,
         "Accept": "*/*",
