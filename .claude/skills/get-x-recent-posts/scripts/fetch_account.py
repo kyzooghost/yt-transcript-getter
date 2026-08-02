@@ -27,6 +27,7 @@ import requests
 
 GRAPHQL_HOST = "https://api.x.com"
 WEB_HOME = "https://x.com"
+PROXY_URL = ""  # Set at runtime via --proxy-url or X_PROXY_URL env var
 SCRIPT_DIR = Path(__file__).resolve().parent
 QUERY_CONFIG = json.loads((SCRIPT_DIR / "query_config.json").read_text())
 DEFAULT_BEARER = QUERY_CONFIG.get("bearer", "")
@@ -85,6 +86,17 @@ def extract_query_ids(js: str) -> dict[str, str]:
     return ids
 
 
+def rewrite_cdn_url(url: str) -> str:
+    """Rewrite an absolute CDN URL through the proxy /cdn/ route if PROXY_URL is set."""
+    if not PROXY_URL:
+        return url
+    # https://abs.twimg.com/path -> <PROXY_URL>/cdn/abs.twimg.com/path
+    m = re.match(r'https://([a-z0-9.\-]+)(/.+)', url)
+    if m:
+        return f"{PROXY_URL}/cdn/{m.group(1)}{m.group(2)}"
+    return url
+
+
 def fetch_web_config(session: requests.Session, handle: str) -> tuple[str, dict[str, str]]:
     """Fetch x.com profile HTML, then main.<hash>.js to extract bearer + queryIds."""
     html = session.get(f"{WEB_HOME}/{handle}", timeout=30).text
@@ -97,10 +109,11 @@ def fetch_web_config(session: requests.Session, handle: str) -> tuple[str, dict[
     bearer = DEFAULT_BEARER
     ids: dict[str, str] = {}
     for url in dict.fromkeys(scripts):  # dedupe, preserve order
+        fetch_url = rewrite_cdn_url(url)
         try:
-            js = session.get(url, timeout=60).text
+            js = session.get(fetch_url, timeout=60).text
         except requests.RequestException as e:
-            log(f"failed to fetch {url}: {e}")
+            log(f"failed to fetch {fetch_url}: {e}")
             continue
         if not bearer or bearer == DEFAULT_BEARER:
             bearer = extract_bearer(js) or bearer
@@ -361,9 +374,21 @@ def main() -> int:
     ap.add_argument("--cookies", required=True)
     ap.add_argument("--run", required=True)
     ap.add_argument("--out-dir", default="output")
+    ap.add_argument("--proxy-url",
+                    default=os.environ.get("X_PROXY_URL", ""),
+                    help="Proxy base URL (e.g. https://x-proxy.xxx.workers.dev)")
     args = ap.parse_args()
 
     os.environ["X_HANDLE"] = args.handle
+
+    # Apply proxy URL to module globals if set.
+    global WEB_HOME, GRAPHQL_HOST, PROXY_URL
+    if args.proxy_url:
+        PROXY_URL = args.proxy_url.rstrip("/")
+        WEB_HOME = f"{PROXY_URL}/x"
+        GRAPHQL_HOST = f"{PROXY_URL}/api"
+        log(f"proxy mode: WEB_HOME={WEB_HOME} GRAPHQL_HOST={GRAPHQL_HOST}")
+
     cutoff = datetime.now(timezone.utc) - timedelta(hours=args.hours)
     cookies = load_cookies(args.cookies)
 
@@ -389,6 +414,10 @@ def main() -> int:
         "x-csrf-token": cookies["ct0"],
         "Cookie": "; ".join(f"{k}={v}" for k, v in cookies.items()),
     })
+    # Add proxy auth token if configured.
+    proxy_token = os.environ.get("X_PROXY_TOKEN", "")
+    if proxy_token:
+        session.headers["X-Proxy-Token"] = proxy_token
 
     bearer, ids = fetch_web_config(session, args.handle)
     log(f"extracted bearer={'yes' if bearer else 'no'}, queryIds={list(ids.keys())}")
