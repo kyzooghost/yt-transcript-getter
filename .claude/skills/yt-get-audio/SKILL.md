@@ -19,7 +19,7 @@ Download YouTube audio, optionally transcribe and summarize.
 URLs -> urls.txt -> MP3 -> [Transcript -> Summary]
 ```
 
-Transcription requires local whisper model. If unavailable, stops at MP3.
+Transcription uses whisper-cpp (primary) or Python openai-whisper (fallback). If neither available, stops at MP3.
 
 ## Workflow
 
@@ -33,44 +33,77 @@ Write provided URLs to `urls.txt` (one per line).
 
 ### 2. Download Audio
 
+For YouTube URLs:
+
 ```bash
 make get-list-audio
 ```
 
+For non-YouTube URLs (e.g. x.com, twitter.com):
+
+```bash
+yt-dlp --cookies-from-browser chrome -x --audio-format mp3 -o "output/audio-%(id)s.%(ext)s" "<URL>"
+```
+
 Output: `output/audio-{video_id}.mp3` for each URL.
 
-### 3. Check for Whisper Model
+### 3. Transcribe (with fallback)
+
+Try transcription methods in order:
+
+#### Method A: whisper-cpp with ggml-medium model (primary)
+
+Check if a valid model exists:
 
 ```bash
 ls ~/.whisper-cpp/ggml-medium.bin
+file ~/.whisper-cpp/ggml-medium.bin  # must NOT be "HTML document"
 ```
 
-**If model NOT found:** Stop here and inform user:
+The model file must be ~1.5GB and a valid ggml binary (not an HTML page from a failed download).
 
-> Audio files downloaded to `output/audio-*.mp3`
->
-> Local whisper model not found at `~/.whisper-cpp/ggml-medium.bin`.
->
-> To transcribe, either:
-> 1. Install whisper-cpp model locally, or
-> 2. Use https://elevenlabs.io/mp3-to-text to transcribe online
->
-> After getting transcripts, save them as `output/transcript-{video_id}.md` and run `/summarise-transcript`.
-
-**If model found:** Continue to step 4.
-
-### 4. Transcribe Each Audio File
-
-For each `output/audio-{video_id}.mp3`:
+If valid, transcribe each `output/audio-{video_id}.mp3`:
 
 ```bash
 ffmpeg -i "output/audio-{video_id}.mp3" -ar 16000 -ac 1 -c:a pcm_s16le /tmp/whisper_{video_id}.wav
-whisper-cpp -m ~/.whisper-cpp/ggml-medium.bin -f /tmp/whisper_{video_id}.wav -otxt -l en
+whisper-cli -m ~/.whisper-cpp/ggml-medium.bin -f /tmp/whisper_{video_id}.wav -otxt -l en
 ```
 
 Save `/tmp/whisper_{video_id}.wav.txt` as `output/transcript-{video_id}.md`.
 
-### 5. Summarize
+#### Method B: Python openai-whisper via uv (fallback)
+
+If whisper-cpp model is missing or corrupt, use the Python openai-whisper package with the cached `small` model at `~/.cache/whisper/small.pt`:
+
+```bash
+uv run --with openai-whisper --with torch python3 -c "
+import whisper
+model = whisper.load_model('small')
+result = model.transcribe('output/audio-{video_id}.mp3', language='en', verbose=False)
+with open('output/transcript-{video_id}.md', 'w') as f:
+    f.write(result['text'])
+"
+```
+
+Repeat for each audio file.
+
+#### Neither method available
+
+If both methods fail, stop and inform user:
+
+> Audio files downloaded to `output/audio-*.mp3`
+>
+> No whisper transcription available:
+> - whisper-cpp model not found/corrupt at `~/.whisper-cpp/ggml-medium.bin`
+> - Python openai-whisper fallback failed
+>
+> To transcribe, either:
+> 1. Download the ggml-medium.bin model (~1.5GB) from huggingface.co/ggerganov/whisper.cpp
+> 2. Use https://elevenlabs.io/mp3-to-text to transcribe online
+>
+> After getting transcripts, save them as `output/transcript-{video_id}.md` and run `/summarise-transcript`.
+
+### 4. Summarize
 
 Invoke `/summarise-transcript` to process all transcripts.
 
@@ -80,10 +113,10 @@ Invoke `/summarise-transcript` to process all transcripts.
 /yt-get-audio https://www.youtube.com/watch?v=abc123
 ```
 
-With whisper model:
+With whisper available:
 - `output/audio-abc123.mp3`
 - `output/transcript-abc123.md`
 - `output/summary-abc123.md`
 
-Without whisper model:
+Without whisper:
 - `output/audio-abc123.mp3` (then use elevenlabs.io for transcription)
