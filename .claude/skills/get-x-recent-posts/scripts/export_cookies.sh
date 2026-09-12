@@ -13,7 +13,7 @@ fi
 
 # --skip-download avoids fetching media; we only need the cookie jar extraction.
 # || true: yt-dlp may emit "no video" warnings; the cookies file is still written.
-yt-dlp --cookies-from-browser chrome --cookies "$OUT" \
+yt-dlp --cookies-from-browser chrome:Default --cookies "$OUT" \
   --skip-download "https://x.com" >/dev/null 2>&1 || true
 
 if [[ -s "$OUT" ]]; then
