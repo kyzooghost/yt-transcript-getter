@@ -103,7 +103,8 @@ One line per tweet (UTF-8, deterministic key order):
 1. Open Chrome DevTools on `https://x.com/<handle>` -> Network -> filter `UserTweetsAndReplies`.
 2. Click the request -> Payload -> copy the `features` JSON.
 3. Replace `scripts/query_config.json` `userTweetsAndReplies.features` (and `userByScreenName.features` from its request).
-4. Re-run.
+4. Keep `longform_notetweets_consumption_enabled: true` in `userTweetsAndReplies.features`. Without it, X omits `note_tweet` and long posts are cut near 280 characters.
+5. Re-run.
 
 ## Auth
 
