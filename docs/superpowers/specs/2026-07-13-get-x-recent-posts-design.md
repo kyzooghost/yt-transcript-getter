@@ -22,7 +22,7 @@ Produce a JSONL dump of posts from the last N hours (default 24, configurable) f
 ```
 
 - Inputs accept full URLs (`https://x.com/yeonwoo1102`), `@handle`, or bare `handle`. Normalized to `handle` internally.
-- `--hours` default 24. Cutoff = `now - hours` (UTC). Pagination stops when a tweet's `createdAt` predates the cutoff.
+- `--hours` default 24. Cutoff = `now - hours` (UTC). Pagination stops when the last result on a page predates the cutoff. A pinned tweet comes first and can be old, so it does not trigger the stop.
 - `--max-per-account` default 800. Safety cap to bound runtime when an account is extremely high-volume within the window.
 
 ## Architecture
@@ -65,7 +65,7 @@ Single-account fetcher. Steps:
    - `x-client-transaction-id: <random hex>`, realistic `User-Agent`, `Referer: https://x.com/<handle>`.
    - `Cookie:` header rebuilt from all `x.com`/`api.x.com` cookies.
 3. Resolve `screen_name -> rest_id` via `UserByScreenName` GraphQL.
-4. Page `UserTweetsAndReplies` via `cursor` until `createdAt < cutoff` OR `max-per-account` hit. 1.5s sleep between pages.
+4. Page `UserTweetsAndReplies` via `cursor` until the last result on a page has `createdAt < cutoff` OR `max-per-account` hit. 1.5s sleep between pages.
 5. Normalize each tweet to the rich schema (below) and append one JSON line to `output/<handle>-<run>.jsonl`.
 6. Print a one-line summary: `handle=<handle> count=<n> range=<earliest>..<latest> wrote=<path>`.
 

@@ -207,6 +207,19 @@ def author_from(result: dict, fallback_handle: str = "") -> dict:
     }
 
 
+def created_at_of(result: dict) -> datetime | None:
+    """Creation time of any timeline result, including subscriber-only previews.
+
+    A TweetPreviewDisplay result has no legacy block: created_at sits on the tweet.
+    """
+    tweet = result.get("tweet", result)
+    created_at = (tweet.get("legacy") or tweet).get("created_at")
+    try:
+        return parse_created_at(created_at) if created_at else None
+    except (KeyError, ValueError, IndexError):
+        return None
+
+
 def ref_summary(result: dict, fallback_handle: str = "") -> dict | None:
     """For quoted/retweeted referenced tweets: minimal info."""
     if not result:
@@ -242,6 +255,8 @@ def normalize_tweet(result: dict, cutoff: datetime, handle: str) -> dict | None:
         return None  # signal caller to treat as out-of-window
 
     author = author_from(result, handle)
+    note = ((result.get("note_tweet") or {}).get("note_tweet_results") or {}).get("result") or {}
+    note_text = note.get("text", "")
     entities = leg.get("entities", {})
     hashtags = [h["text"] for h in entities.get("hashtags", [])]
     cashtags = [s["text"] for s in entities.get("symbols", [])]
@@ -295,7 +310,8 @@ def normalize_tweet(result: dict, cutoff: datetime, handle: str) -> dict | None:
         "createdAt": created.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
         "url": f"https://x.com/{author['screenName'] or handle}/status/{tid}",
         "type": ttype,
-        "text": leg.get("full_text", ""),
+        # Long posts: legacy.full_text is cut near 280 chars; the full text is in note_tweet.
+        "text": note_text or leg.get("full_text", ""),
         "inReplyTo": in_reply_to,
         "quoteOf": quote_of,
         "retweetOf": retweet_of,
@@ -464,17 +480,7 @@ def main() -> int:
             for result in results:
                 rec = normalize_tweet(result, cutoff, args.handle)
                 if rec is None:
-                    # could be out-of-window (created < cutoff) or tombstone
-                    leg = (result.get("legacy") or {})
-                    ca = leg.get("created_at")
-                    if ca:
-                        try:
-                            cdt = parse_created_at(ca)
-                            if cdt < cutoff:
-                                stop = True
-                        except Exception:
-                            pass
-                    continue
+                    continue  # out-of-window or tombstone
                 if rec["id"] in seen_ids:
                     continue  # pagination cursor overlap re-delivers tweets
                 seen_ids.add(rec["id"])
@@ -488,6 +494,11 @@ def main() -> int:
                 if count >= args.max_per_account:
                     stop = True
                     break
+        # The timeline is newest-first, but a pinned tweet comes first and can be old.
+        # Stop only when the last result on the page is out of window.
+        bottom_created = created_at_of(results[-1])
+        if bottom_created and bottom_created < cutoff:
+            stop = True
         log(f"page {page}: +{len(results)} results, total emitted {count}, "
             f"has_next={bool(next_cursor)}, stop={stop}")
         if not next_cursor or next_cursor == cursor:
